@@ -1,0 +1,69 @@
+#include<unistd.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+
+int main(int argc,char *argv[])
+{
+    int array[1000];
+    int a;
+
+    for (a=0; a < 1000;a=a+1)
+        array[a]=a;
+   
+    int num_child=10;
+    int i;
+    int j;
+    int num=0;
+    int sum=0;
+    int fd[2];
+    int r;
+    int result;
+    int pid;
+
+    if (pipe(fd) == -1)
+	{
+	    printf("Pipe Failed\n" );
+	    return 1;
+	}
+
+   for (i=0; i < num_child; i=i+1)
+   {
+       if ((pid = fork()) == -1)
+       {
+           printf("error occured with fork()\n");
+           exit(99);
+       }
+       else if (pid == 0)
+       {
+            for (j=num;j < num + 100; j=j+1)
+            {
+                sum=sum+array[j];
+            }
+
+            write(fd[1], &sum, sizeof(sum));
+            close(fd[1]);
+            
+            printf("i am child [%d] of parent [%d]\n",getpid(),getppid());
+            exit(0);
+       }
+
+        num = num + 100;
+   }
+
+    for (i = 0; i < num_child; i++)
+    {
+        wait(NULL);
+        printf("i am parent [%d]\n",getpid());
+        read(fd[0], &r, sizeof(r));
+        result = result + r;
+    }
+
+    close(fd[0]);
+    close(fd[1]);
+
+    printf("\nThe sum of the first 1000 integers is %d\n", result);
+
+    return 0;
+}
