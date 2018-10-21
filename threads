@@ -1,0 +1,57 @@
+#include<unistd.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<pthread.h>
+
+#define num_thread 10
+#define size_array 1000
+
+    int array[size_array];
+    
+
+void * sum_array(void *part) 
+{  
+    int thread_part = (int)part;
+    int sum = 0; 
+  
+    for (int i = thread_part * (size_array/num_thread); i < (thread_part + 1) * (size_array/num_thread); i++) 
+        sum = sum + array[i];
+    
+    return ((void*)sum);
+} 
+
+int main(int argc,char *argv[])
+{
+    int i;
+    int j;
+
+    int sum[num_thread];
+    int total_sum=0;
+
+    int status;
+   
+    int a;
+
+    for (a = 0; a < size_array ; a = a + 1)
+        array[a]=a;
+
+    pthread_t threads[num_thread];
+
+   for (i=0; i < num_thread; i++)
+   {
+       pthread_create(&threads[i],NULL,sum_array,(void*)i);
+   }
+
+    for (j = 0; j < num_thread; j++)
+    {
+       pthread_join(threads[j],(void**) & status);
+       sum[j] = status;
+    }
+
+    for (j = 0; j < num_thread; j++)
+       total_sum = total_sum + sum[j];
+
+    printf("\nThe sum of the first 1000 numbers is %d\n", total_sum);
+
+    return 0;
+}
